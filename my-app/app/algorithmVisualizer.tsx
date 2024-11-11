@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker'; // Importing Picker
 
 const { width } = Dimensions.get('window');
 const BAR_WIDTH = width > 600 ? 20 : 10;
@@ -15,6 +16,7 @@ const AlgorithmVisualizer: React.FC = () => {
   const [speed, setSpeed] = useState<number>(500);
   const [isSorting, setIsSorting] = useState<boolean>(false);
   const [isStopped, setIsStopped] = useState<boolean>(false);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('Bubble Sort');
 
   const generateArray = useCallback(() => {
     const newArray = Array.from({ length: MAX_BARS }, () => Math.floor(Math.random() * 100) + 1);
@@ -40,7 +42,12 @@ const AlgorithmVisualizer: React.FC = () => {
   };
 
   const startSorting = () => {
-    bubbleSort(array); // Begin sorting and set steps for visualization
+    switch (selectedAlgorithm) {
+      case 'Bubble Sort':
+        bubbleSort(array);
+        break;
+      // Add other algorithms here
+    }
     setIsSorting(true);
     setIsStopped(false);
   };
@@ -90,6 +97,10 @@ const AlgorithmVisualizer: React.FC = () => {
     );
   };
 
+  const handleAlgorithmChange = (algorithm: string) => {
+    setSelectedAlgorithm(algorithm);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bubble Sort Visualizer</Text>
@@ -100,12 +111,35 @@ const AlgorithmVisualizer: React.FC = () => {
         <TouchableOpacity style={styles.button} onPress={startSorting} disabled={isSorting}>
           <Text style={styles.buttonText}>{isSorting ? 'Sorting...' : 'Start Sort'}</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+          disabled={currentStep <= 0 || !isSorting}
+        >
+          <Text style={styles.buttonText}>Previous Step</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))}
+          disabled={currentStep >= steps.length - 1 || !isSorting}
+        >
+          <Text style={styles.buttonText}>Next Step</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={stopSorting} disabled={!isSorting}>
           <Text style={styles.buttonText}>Stop</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={resetVisualization}>
           <Text style={styles.buttonText}>Reset</Text>
         </TouchableOpacity>
+        <Picker
+          selectedValue={selectedAlgorithm}
+          style={{ height: 50, width: 150 }}
+          onValueChange={(itemValue) => handleAlgorithmChange(itemValue)}
+        >
+          <Picker.Item label="Bubble Sort" value="Bubble Sort" />
+          <Picker.Item label="Insertion Sort" value="Insertion Sort" />
+          {/* Add other sorting algorithms here */}
+        </Picker>
       </View>
       <View style={styles.sliderContainer}>
         <Text>Speed: {Math.round(1000 - speed)}ms</Text>
@@ -190,7 +224,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 1,
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
+    transitionProperty: 'height',  // This is for web; React Native animations may vary.
+    transitionDuration: '200ms',
   },
+  
   yAxis: {
     width: AXIS_WIDTH,
     height: GRAPH_HEIGHT,
